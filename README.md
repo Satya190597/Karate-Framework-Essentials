@@ -1705,5 +1705,232 @@ Using reusable feature files and common payload templates.
 Use karate-config.js and environment configurations.
 
 ---
-# Summary
+### Summary
 Embedded Expressions are one of the most important Karate Framework capabilities for building dynamic API requests. They provide a clean, maintainable, and type-safe way of injecting variables, JsonPath results, arrays, objects, and calculated values into JSON payloads. Combined with reusable test data and sound framework design, they enable highly scalable enterprise API automation solutions.
+
+## Karate Framework - JsonPath Expressions (Jayway JsonPath)
+
+
+### What is JsonPath?
+JsonPath is a query language used to extract data from JSON documents.
+
+### Why is it used?
+- Simplifies JSON parsing
+- Avoids complex loops
+- Makes validations concise
+- Improves test readability
+
+### Example JSON
+```json
+{
+  "customer": {
+    "id": 101,
+    "name": "John"
+  }
+}
+```
+
+### Example
+```karate
+* def name = response.customer.name
+* match name == 'John'
+```
+
+---
+
+### Karate and Jayway JsonPath
+
+Karate internally uses Jayway JsonPath.
+
+```karate
+* def name = karate.jsonPath(response, '$.customer.name')
+```
+
+Use it when dynamic path evaluation is needed.
+
+---
+
+### karate.get()
+
+### What is it?
+Reads JSON using path notation.
+
+### Example
+```karate
+* def city = karate.get('response.customer.address.city')
+```
+
+### Why use it?
+- Cleaner syntax
+- Easier to read
+
+---
+
+### karate.jsonPath()
+
+## What is it?
+Runs JsonPath expressions on JSON.
+
+```karate
+* def id = karate.jsonPath(response, '$.customer.id')
+```
+
+---
+
+### Array Access
+
+```json
+{
+  "users": [
+    {"id":1,"name":"John"},
+    {"id":2,"name":"Mary"}
+  ]
+}
+```
+
+```karate
+* def userName = karate.jsonPath(response,'$.users[0].name')
+```
+
+---
+
+### Filter Expressions
+
+```karate
+* def premium = karate.jsonPath(response,"$.users[?(@.type=='PREMIUM')]")
+```
+
+Real-world usage:
+- Get active subscriptions
+- Find successful orders
+- Validate product types
+
+---
+
+### Nested JSON
+
+```karate
+* def zip = karate.jsonPath(response,'$.customer.address.zipcode')
+```
+
+---
+
+### Extract Collection Values
+
+```karate
+* def ids = karate.jsonPath(response,'$.users[*].id')
+```
+
+---
+
+### Assertion Examples
+
+```karate
+* match karate.jsonPath(response,'$.customer.id') == 101
+```
+
+```karate
+* match karate.jsonPath(response,'$.users[*].name') contains 'John'
+```
+
+---
+
+### Real World Example
+
+```json
+{
+ "cartItems":[
+  {"productType":"Mobile"},
+  {"productType":"Accessory"}
+ ]
+}
+```
+
+```karate
+* def items = karate.jsonPath(response,"$.cartItems[?(@.productType=='Mobile')]")
+* match items.length == 1
+```
+
+---
+
+### Common JsonPath Expressions
+
+| Expression | Purpose |
+|------------|---------|
+| $.id | root field |
+| $.users[0] | first element |
+| $.users[*] | all elements |
+| $.users[*].name | all names |
+| $..name | recursive search |
+| $.users[?(@.active==true)] | filter |
+
+---
+
+### Best Practices
+
+1. Prefer direct property access for simple validations.
+2. Use JsonPath only when complexity increases.
+3. Avoid deeply nested assertions.
+4. Store extracted values in variables.
+5. Keep feature files readable.
+
+---
+
+### Interview Questions and Answers
+
+### What is JsonPath?
+A query language for extracting values from JSON.
+
+### Why is JsonPath useful?
+It simplifies reading and validating JSON payloads.
+
+### Difference between XPath and JsonPath?
+XPath is for XML, JsonPath is for JSON.
+
+### What is karate.jsonPath()?
+A Karate utility method that evaluates JsonPath expressions.
+
+### What is karate.get()?
+A simpler path-based accessor.
+
+### How do you filter JSON arrays?
+```karate
+$.items[?(@.status=='ACTIVE')]
+```
+
+### When should you prefer JsonPath over direct access?
+For filtering, dynamic queries, and complex traversal.
+
+### How can JsonPath improve maintainability?
+It removes manual iteration logic and keeps tests concise.
+
+### How do you validate nested arrays?
+Using wildcard and filter expressions.
+
+### Validate successful orders only.
+```karate
+* def completed = karate.jsonPath(response,"$.orders[?(@.status=='COMPLETED')]")
+* match completed.length > 0
+```
+### Validate existence of premium customer.
+```karate
+* def premium = karate.jsonPath(response,"$.customers[?(@.segment=='PREMIUM')]")
+* match premium.length == 1
+```
+### Validate telecom cart line items.
+```karate
+* def mobiles = karate.jsonPath(response,"$.cartItems[?(@.productType=='Mobile')]")
+* match mobiles.length > 0
+```
+
+---
+
+### Key Takeaways
+
+- Karate uses Jayway JsonPath.
+- karate.get() is simpler for straightforward access.
+- karate.jsonPath() handles advanced filtering and extraction.
+- JsonPath greatly improves API automation readability.
+- Filter expressions are heavily used in enterprise API testing.
+- Combining JsonPath and Karate assertions leads to concise and maintainable tests.
+
