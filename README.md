@@ -1934,3 +1934,370 @@ Using wildcard and filter expressions.
 - Filter expressions are heavily used in enterprise API testing.
 - Combining JsonPath and Karate assertions leads to concise and maintainable tests.
 
+## Karate Framework Data-Driven Testing Complete Guide
+
+### Introduction to Data-Driven Testing
+
+### What is it?
+Data-driven testing allows the same scenario to be executed multiple times with different data sets.
+
+### Why use it?
+- Reduce duplication
+- Improve maintainability
+- Increase test coverage
+- Separate test logic from test data
+
+### Example
+```gherkin
+Scenario Outline: Verify User
+Given url baseUrl
+And path 'users', '<id>'
+When method get
+Then status 200
+And match response.id == <id>
+
+Examples:
+| id |
+| 1  |
+| 2  |
+| 3  |
+```
+
+---
+
+### Scenario Outline
+
+### What is it?
+A reusable scenario template executed once per row in the Examples table.
+
+### Why use it?
+Avoid creating multiple identical scenarios.
+
+```gherkin
+Scenario Outline: Login Test
+* print username
+
+Examples:
+| username |
+| admin |
+| user1 |
+```
+
+---
+
+### Examples Table
+
+Provides input values for each execution.
+
+```gherkin
+Examples:
+| username | password |
+| admin    | admin123 |
+| test     | test123  |
+```
+
+---
+
+### Magic Variables
+
+### __row
+Returns the current row as JSON.
+
+```gherkin
+Scenario Outline:
+* print __row
+
+Examples:
+| id | name |
+| 1  | John |
+```
+
+Output:
+```json
+{ "id":1, "name":"John" }
+```
+
+### __num
+Current iteration number.
+
+```gherkin
+* print __num
+```
+
+---
+
+### Auto Variables
+
+Every column becomes a variable automatically.
+
+```gherkin
+Examples:
+| userId |
+| 100    |
+```
+
+```gherkin
+* print userId
+```
+
+---
+
+### Embedded Expressions
+
+Use Karate expressions directly inside Examples.
+
+```gherkin
+Examples:
+| id | expected |
+| 1  | #(1+1)   |
+```
+
+---
+
+### Variables Inside Examples
+
+```gherkin
+* def prefix = 'user'
+
+Scenario Outline:
+* print name
+
+Examples:
+| name |
+| #(prefix + '1') |
+| #(prefix + '2') |
+```
+
+---
+
+### Exclamation Mark Columns
+
+Karate allows special handling of columns prefixed with !.
+
+```gherkin
+Examples:
+| id | !payload |
+| 1  | {name:'John'} |
+```
+
+Useful when passing structured objects.
+
+---
+
+### Data-Driven Testing Using JSON Files
+
+### Why JSON?
+- Nested structures
+- Large datasets
+- Reusable test data
+
+### users.json
+```json
+[
+ {"id":1,"name":"John"},
+ {"id":2,"name":"Mary"}
+]
+```
+
+### Feature File
+```gherkin
+* def users = read('users.json')
+
+Scenario Outline:
+Given url baseUrl
+And path 'users', id
+When method get
+Then status 200
+And match response.name == name
+
+Examples:
+| karate.setup().users |
+```
+
+Alternative:
+```gherkin
+* def users = read('classpath:data/users.json')
+* def user = users[0]
+```
+
+---
+
+### Data-Driven Testing Using CSV
+
+### Why CSV?
+- Business-friendly
+- Excel compatible
+- Easy maintenance
+
+### users.csv
+```csv
+id,name
+1,John
+2,Mary
+```
+
+### Karate Implementation
+```gherkin
+* def users = read('users.csv')
+```
+
+```gherkin
+Scenario Outline:
+Given path 'users', id
+When method get
+Then status 200
+And match response.name == name
+
+Examples:
+| users |
+```
+
+---
+
+### Enterprise Use Cases
+
+### Customer Creation Testing
+```gherkin
+Examples:
+| customerId | type |
+| 1001 | Retail |
+| 1002 | Business |
+```
+
+### Payment Validation
+```gherkin
+Examples:
+| amount |
+| 10 |
+| 100 |
+| 1000 |
+```
+
+---
+
+### Advanced JSON Driven Pattern
+
+```gherkin
+* def testData = read('classpath:data/orders.json')
+
+Scenario Outline:
+Given request __row
+When method post
+Then status 201
+
+Examples:
+| testData |
+```
+
+---
+
+### Reusable Data Loader
+
+```gherkin
+@ignore
+Scenario:
+* def users = read('users.json')
+* karate.set('users', users)
+```
+
+---
+
+### Best Practices
+
+1. Keep test data separate from feature files.
+2. Use JSON for complex payloads.
+3. Use CSV for business-maintained data.
+4. Avoid duplicate examples.
+5. Use meaningful column names.
+
+---
+
+### Common Pitfalls
+
+### Hardcoded Data
+Bad:
+```gherkin
+* def id = 1
+```
+
+Good:
+```gherkin
+Examples:
+| id |
+| 1 |
+```
+
+### Huge Example Tables
+Move large datasets into JSON/CSV.
+
+### Duplicate Scenarios
+Prefer Scenario Outline.
+
+---
+
+### Interview Questions and Answers
+
+### What is data-driven testing?
+Executing the same test using different datasets.
+
+### What is Scenario Outline?
+A Karate structure that repeats execution for each Examples row.
+
+### What are magic variables?
+Built-in variables such as __row and __num.
+
+### Difference between Scenario and Scenario Outline?
+Scenario runs once; Scenario Outline runs once per example.
+
+### Difference between JSON and CSV driven testing?
+JSON supports nested structures. CSV is flat and business-friendly.
+
+### What does __row return?
+Current row as JSON object.
+
+### What does __num return?
+Current iteration number.
+
+### Why store data externally?
+Improves maintainability and reusability.
+
+### How would you execute hundreds of datasets efficiently?
+Store data in JSON/CSV and use Scenario Outline.
+
+### How do you test large request payloads?
+Generate payloads from JSON templates and override dynamically.
+
+### How do you handle environment-specific test data?
+Use karate-config.js together with environment files.
+
+### How would you create reusable datasets?
+Create dedicated data provider features and share them across suites.
+
+### A telecom order API needs 500 order combinations. How would you design it?
+Use JSON-driven tests with Scenario Outline and reusable payload templates.
+
+### Business users maintain test data in Excel. What approach would you use?
+Export Excel to CSV and read via Karate.
+
+### A payload changes frequently. How would you maintain tests?
+Move payloads into JSON templates and use overrides.
+
+### A single scenario requires different authentication methods. What would you do?
+Pass auth configuration through a JSON dataset and drive execution dynamically.
+
+---
+
+### Summary
+
+Karate provides a powerful mechanism for implementing data-driven testing through:
+
+- Scenario Outline
+- Examples Tables
+- Magic Variables (__row, __num)
+- Auto Variables
+- Embedded Expressions
+- JSON Data Sources
+- CSV Data Sources
+
+For enterprise API automation, JSON-driven testing combined with reusable payload templates is typically the most scalable approach, while CSV remains ideal for business-maintained datasets.
+
