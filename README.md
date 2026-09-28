@@ -1265,3 +1265,445 @@ Correct:
 - Java utilities improve reusability and maintainability.
 - Existing Java frameworks can be reused inside Karate.
 - Ideal for utilities, encryption, database validation, and test-data generation.
+
+## Karate Framework: Embedded Expressions, Variables & JsonPath in Dynamic JSON Payloads
+
+### Overview
+
+Embedded expressions are one of Karate's most powerful features because they allow test data, variables, and JsonPath results to be injected directly into JSON structures without manual string concatenation.
+
+### Introduction
+
+API automation often requires sending dynamic request payloads.
+
+Examples:
+
+- Customer IDs generated during execution
+- Order references returned by previous APIs
+- Tokens generated during authentication
+- Dynamic product identifiers
+
+Karate solves this elegantly using:
+
+- Variables
+- Embedded Expressions
+- JsonPath Expressions
+
+---
+
+### What are Embedded Expressions?
+
+### Definition
+
+Embedded expressions allow JavaScript expressions to be evaluated inside JSON or XML using the syntax:
+
+```karate
+#(expression)
+```
+
+Karate evaluates the expression and replaces it with the resulting value.
+
+### Why it is used
+
+Without embedded expressions:
+
+```karate
+* def payload = '{"id":"' + customerId + '"}'
+```
+
+With embedded expressions:
+
+```karate
+* def payload =
+"""
+{
+  "id": "#(customerId)"
+}
+"""
+```
+
+Cleaner and easier to maintain.
+
+---
+
+### Variables in Karate
+
+### What are Variables?
+
+Variables store reusable data.
+
+### Syntax
+
+```karate
+* def customerId = 1001
+* def customerName = 'John'
+```
+
+### Example
+
+```karate
+Feature: Variables Example
+
+Scenario: Create variables
+
+    * def id = 101
+    * def name = 'John'
+
+    * print id
+    * print name
+```
+
+---
+
+### Using Embedded Expressions in JSON
+
+### Example
+
+```karate
+* def customerId = 111
+* def customerName = 'Alex'
+
+* def requestBody =
+"""
+{
+  "id": #(customerId),
+  "name": "#(customerName)"
+}
+"""
+```
+
+Result:
+
+```json
+{
+  "id": 111,
+  "name": "Alex"
+}
+```
+
+### Important Note
+
+Numbers should not be enclosed in quotes if numerical type is desired.
+
+Correct:
+
+```karate
+"id": #(customerId)
+```
+
+Incorrect:
+
+```karate
+"id": "#(customerId)"
+```
+
+---
+
+### Using JsonPath Inside Embedded Expressions
+
+## What is JsonPath?
+
+JsonPath extracts values from JSON documents.
+
+### Why it is Used
+
+To reuse response values in subsequent requests.
+
+### Example Response
+
+```json
+{
+  "customer": {
+    "id": 2001,
+    "name": "John"
+  }
+}
+```
+
+Extract value:
+
+```karate
+* def customerId = response.customer.id
+```
+
+or
+
+```karate
+* def customerId = get response.customer.id
+```
+
+Use inside payload:
+
+```karate
+* def payload =
+"""
+{
+  "customerId": #(customerId)
+}
+"""
+```
+
+---
+
+### Dynamic Payload Creation
+
+### Scenario
+
+Create Customer
+
+```karate
+Given url baseUrl + '/customers'
+And request
+"""
+{
+   "name": "John"
+}
+"""
+When method post
+Then status 201
+
+* def customerId = response.id
+```
+
+Create Order
+
+```karate
+* def orderRequest =
+"""
+{
+   "customerId": #(customerId),
+   "product": "iPhone"
+}
+"""
+```
+
+---
+
+### Embedded Expressions with Objects
+
+```karate
+* def address =
+{
+   city: 'Bangalore',
+   country: 'India'
+}
+
+* def payload =
+"""
+{
+   "address": #(address)
+}
+"""
+```
+
+---
+
+### Embedded Expressions with Arrays
+
+```karate
+* def roles = ['ADMIN', 'USER']
+
+* def requestBody =
+"""
+{
+   "roles": #(roles)
+}
+"""
+```
+
+---
+
+### Conditional Dynamic Values
+
+```karate
+* def isPremium = true
+
+* def payload =
+"""
+{
+   "discount": #(isPremium ? 20 : 0)
+}
+"""
+```
+
+---
+
+### Dynamic Dates
+
+```karate
+* def currentDate = new Date().toISOString()
+
+* def payload =
+"""
+{
+   "createdDate": "#(currentDate)"
+}
+"""
+```
+
+---
+
+### Using External Test Data
+
+```karate
+* def testData = read('customer.json')
+
+* def payload =
+"""
+{
+   "customerId": #(testData.customerId),
+   "name": "#(testData.name)"
+}
+"""
+```
+
+---
+
+### Enterprise Real World Scenarios
+
+### Telecom Order Management
+
+```karate
+{
+   "serviceId": #(response.service.id),
+   "productCode": "POSTPAID"
+}
+```
+
+### Cart Management
+
+```karate
+{
+   "cartId": #(cartResponse.id),
+   "customerId": #(customerId)
+}
+```
+
+### Authentication Flow
+
+```karate
+{
+   "token": "#(authToken)"
+}
+```
+
+### Inventory Management
+
+```karate
+{
+   "sku": "#(sku)",
+   "quantity": #(availableQty)
+}
+```
+
+---
+
+### Common Mistakes
+
+### Mixing Strings and Numbers
+
+Wrong:
+
+```karate
+"id":"#(id)"
+```
+
+### Undefined Variables
+
+Wrong:
+
+```karate
+"id": #(customerId)
+```
+
+if variable not initialized.
+
+### Incorrect JsonPath
+
+```karate
+response.customer.id
+```
+
+Verify path exists before use.
+
+---
+
+### Best Practices (Enterprise Projects)
+
+1. Keep payload templates separate from feature files.
+2. Store reusable payloads under a payloads folder.
+3. Use embedded expressions instead of string concatenation.
+4. Avoid hardcoded IDs.
+5. Reuse response values through variables.
+6. Validate extracted JsonPath values before consumption.
+7. Use meaningful variable names.
+8. Centralize common test data.
+9. Use environment-specific configuration files.
+10. Avoid deeply nested dynamic expressions.
+---
+
+### Interview Questions and Answers
+
+### What is an embedded expression?
+An expression evaluated using #(expression) inside JSON or XML.
+
+### Why use embedded expressions?
+To create dynamic payloads without string manipulation.
+
+### How do you define a variable?
+
+```karate
+* def id = 100
+```
+### What is JsonPath?
+A syntax used to extract data from JSON.
+
+### Difference between variable substitution and embedded expression?
+Embedded expressions evaluate JavaScript and objects while substitution primarily injects values.
+
+### Can embedded expressions inject arrays?
+Yes.
+
+```karate
+"roles": #(roles)
+```
+
+### Can you use a response value in another request?
+Yes using variables and JsonPath.
+
+### How does Karate preserve JSON types?
+Embedded expressions keep numeric, boolean, array and object types intact.
+
+### When should embedded expressions not be used?
+Avoid excessive logic inside payloads.
+
+### How can dynamic payloads be shared across features?
+Using reusable feature files and common payload templates.
+
+## Scenario Based Questions
+
+### Customer API returns an ID. How would you create an Order API request?
+
+```karate
+* def customerId = response.id
+
+* def orderRequest =
+"""
+{
+   "customerId": #(customerId)
+}
+"""
+```
+
+### How would you generate unique emails?
+
+```karate
+* def email = 'user' + java.lang.System.currentTimeMillis() + '@test.com'
+```
+
+### How do you handle environment-specific data?
+Use karate-config.js and environment configurations.
+
+---
+# Summary
+Embedded Expressions are one of the most important Karate Framework capabilities for building dynamic API requests. They provide a clean, maintainable, and type-safe way of injecting variables, JsonPath results, arrays, objects, and calculated values into JSON payloads. Combined with reusable test data and sound framework design, they enable highly scalable enterprise API automation solutions.
