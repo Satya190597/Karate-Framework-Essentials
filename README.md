@@ -2301,3 +2301,124 @@ Karate provides a powerful mechanism for implementing data-driven testing throug
 
 For enterprise API automation, JSON-driven testing combined with reusable payload templates is typically the most scalable approach, while CSV remains ideal for business-maintained datasets.
 
+## Karate Framework Retry Mechanism (`retry until`)
+
+Modern enterprise applications often contain asynchronous processes where data is not immediately available after an API request is executed. Examples include:
+
+- Kafka-based event processing
+- Message queues (RabbitMQ, ActiveMQ)
+- Batch jobs
+- Payment gateways
+- Order fulfillment systems
+- User provisioning workflows
+- Search index updates
+
+Karate provides a powerful built-in retry mechanism using the `retry until` keyword, allowing tests to repeatedly execute an HTTP request until a specified condition becomes true.
+
+### Why Retry Mechanisms Are Important
+
+### The Problem
+
+```text
+Create Order
+     |
+     V
+Publish Kafka Event
+     |
+     V
+Background Order Processing
+     |
+     V
+Database Update
+     |
+     V
+Order Status = COMPLETED
+```
+
+Immediately after order creation, querying the order status may return:
+
+```json
+{
+  "orderId": "12345",
+  "status": "PROCESSING"
+}
+```
+
+If the test expects `COMPLETED`, the validation may fail although the system is functioning correctly.
+
+### Karate Solution
+
+```karate
+And retry until response.status == 'COMPLETED'
+```
+
+Karate automatically retries the request until the condition becomes true or the retry limit is reached.
+
+### Basic Retry Syntax
+```karate
+Given path 'orders', orderId
+And retry until response.status == 'COMPLETED'
+When method GET
+Then status 200
+```
+
+### Default Retry Behavior
+```text
+Retry Count    : 3
+Retry Interval : 3000 milliseconds
+```
+
+---
+
+### Custom Retry Configuration
+```karate
+* configure retry = { count: 10, interval: 5000 }
+```
+
+### Enterprise Example
+```karate
+* configure retry = { count: 20, interval: 3000 }
+
+Given path 'orders', orderId
+And retry until response.status == 'COMPLETED'
+When method GET
+Then status 200
+```
+
+### Best Practices
+
+1. Prefer `retry until` over `Thread.sleep()`.
+2. Validate business state, not only HTTP status.
+3. Use environment-specific retry settings.
+4. Avoid excessive retry counts.
+5. Keep polling intervals reasonable.
+6. Retry only asynchronous operations.
+
+### Interview Questions
+
+### Beginner
+
+**Q:** What is `retry until`?
+
+**A:** A Karate feature that repeatedly executes an HTTP request until a specified condition becomes true.
+
+**Q:** How do you customize retry settings?
+
+```karate
+* configure retry = { count: 10, interval: 5000 }
+```
+
+**Q:** When should retry not be used?
+
+**A:** Authentication failures, invalid requests, authorization issues, and permanent business validation errors.
+
+---
+
+### Key Takeaways
+
+- Eliminates hardcoded waits.
+- Reduces flaky tests.
+- Ideal for event-driven systems.
+- Works well with Kafka and asynchronous workflows.
+- Improves test reliability and maintainability.
+
