@@ -2422,3 +2422,284 @@ Then status 200
 - Works well with Kafka and asynchronous workflows.
 - Improves test reliability and maintainability.
 
+## Karate Framework: Calling JavaScript Functions and External JavaScript Files
+
+### Why JavaScript in Karate?
+
+Karate is built on top of JavaScript execution capabilities.
+
+Benefits:
+- Reusable utility functions
+- Cleaner feature files
+- Complex data manipulation
+- Dynamic payload generation
+- Authentication token generation helpers
+- Test data transformations
+
+---
+
+### Understanding JavaScript Functions in Karate
+
+### What is it?
+JavaScript functions are reusable blocks of code executed from Karate feature files.
+
+### Why use it?
+- Avoid duplication
+- Centralize logic
+- Improve maintainability
+- Share utilities across multiple tests
+
+### Example
+
+```karate
+Scenario: Call JavaScript Function
+
+* def add =
+"""
+function(a,b){
+ return a+b;
+}
+"""
+
+* def result = add(10,20)
+* match result == 30
+```
+
+### Important Notes
+- Functions can accept multiple parameters.
+- Returned values can be stored in Karate variables.
+- Functions execute inside Karate runtime.
+
+---
+
+### External JavaScript Files
+
+### What is it?
+A JavaScript file that contains reusable functions.
+
+### Why use it?
+Large projects require reusability.
+
+### utils.js
+
+```javascript
+function getFullName(firstName,lastName){
+    return firstName + ' ' + lastName;
+}
+```
+
+### Feature File
+
+```karate
+* def utils = read('classpath:js/utils.js')
+* def name = utils.getFullName('John', 'Smith')
+* print name
+```
+
+---
+
+### Returning JSON Objects
+
+```javascript
+function createUser(){
+ return {
+   id: 101,
+   name: 'John'
+ };
+}
+```
+
+```karate
+* def util = read('classpath:js/user.js')
+* def user = util.createUser()
+* match user.name == 'John'
+```
+
+---
+
+### Parameterized Functions
+
+```javascript
+function createCustomer(id,name){
+ return {
+   customerId:id,
+   customerName:name
+ };
+}
+```
+
+```karate
+* def helper = read('classpath:js/customer.js')
+* def customer = helper.createCustomer(1001,'Satya')
+```
+
+---
+
+### Dynamic Payload Creation
+
+```javascript
+function buildOrder(id,product){
+ return {
+  orderId:id,
+  product:product
+ };
+}
+```
+
+```karate
+* def payloadBuilder = read('classpath:js/order.js')
+* def requestBody = payloadBuilder.buildOrder(101,'iPhone')
+Given request requestBody
+```
+
+---
+
+### Enterprise Real-World Use Cases
+
+### Authentication Token Generation
+
+```javascript
+function generateToken(username){
+ return 'Bearer dummy-token-' + username;
+}
+```
+
+### Correlation ID Generation
+
+```javascript
+function correlationId(){
+ return java.util.UUID.randomUUID() + '';
+}
+```
+
+### Date Utilities
+
+```javascript
+function futureDate(days){
+ var LocalDate = Java.type('java.time.LocalDate');
+ return LocalDate.now().plusDays(days).toString();
+}
+```
+
+---
+
+### Calling Java Methods vs JavaScript Functions
+
+| Feature | JavaScript | Java |
+|----------|------------|------|
+| Simplicity | High | Medium |
+| Reusability | High | High |
+| Performance | Good | Better |
+| Utility Logic | Excellent | Excellent |
+
+---
+
+### Recommended Project Structure
+
+```text
+src
+ └── test
+     ├── java
+     │   └── runners
+     └── resources
+         ├── features
+         ├── payloads
+         ├── config
+         └── js
+             ├── token.js
+             ├── dates.js
+             └── payloadBuilder.js
+```
+
+---
+
+### Best Practices
+
+1. Store reusable functions in external JS files.
+2. Keep feature files business readable.
+3. Use JS only for transformations.
+4. Keep functions small.
+5. Use meaningful names.
+
+---
+
+### Common Mistakes
+
+### Forgetting classpath
+
+```karate
+* def util = read('utils.js')
+```
+
+Prefer:
+
+```karate
+* def util = read('classpath:js/utils.js')
+```
+
+### Returning Invalid JSON
+
+```javascript
+function bad(){
+ return id:1;
+}
+```
+
+Correct:
+
+```javascript
+function good(){
+ return {id:1};
+}
+```
+
+---
+
+### Interview Questions and Answers
+
+### Beginner
+
+### What is JavaScript usage in Karate?
+Used for reusable logic and dynamic data generation.
+
+### How do you call a JS function?
+Using `def` and function invocation.
+
+### How do you read an external JS file?
+Using `read('classpath:path/file.js')`.
+
+### Why move functions into separate JS files?
+To improve maintainability and reusability.
+
+### Can JS functions return JSON?
+Yes.
+
+### Can JS functions accept parameters?
+Yes.
+
+### When should you use Java instead of JavaScript?
+Complex business logic, cryptography, database integrations, and shared enterprise utilities.
+
+### How can payload factories improve automation architecture?
+They centralize request-generation logic.
+
+### How do you build reusable frameworks using JS utilities?
+Extract common utilities into shared modules and version them.
+
+## Scenario Based
+
+### Generate a unique order payload for every test execution.
+Create a JS utility that builds payloads dynamically.
+
+### Need a future activation date.
+Create a reusable date utility.
+
+### Multiple APIs require authentication.
+Create a shared token generator utility.
+
+---
+
+### Summary
+
+Karate's JavaScript integration enables reusable utilities, dynamic payload creation, date manipulation, token generation, and framework-level reusability. External JS files help keep feature files concise and maintainable while supporting enterprise-scale automation frameworks.
+
